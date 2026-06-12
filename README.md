@@ -200,4 +200,5 @@ MIT License
 
 # 作者
 
-RodRailgun
+GDkk
+GPT(协助开发)
