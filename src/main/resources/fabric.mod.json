@@ -1,0 +1,35 @@
+{
+	"schemaVersion": 1,
+	"id": "hatelock",
+	"version": "1.2.0",
+	"name": "HateLock",
+	"description": "仇恨锁定模组,可以将任意怪物锁定到任意玩家上",
+	"authors": [
+		"空空"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/hatelock/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+          "com.yourname.hatelock.hatelock"
+		],
+		"client": [
+			"com.yourname.hatelock.hatelockClient"
+		]
+	},
+	"mixins": [],
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}

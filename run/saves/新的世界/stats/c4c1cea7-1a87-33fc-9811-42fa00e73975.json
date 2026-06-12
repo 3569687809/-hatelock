@@ -1,0 +1,21 @@
+{
+  "stats": {
+    "minecraft:killed": {
+      "minecraft:slime": 2
+    },
+    "minecraft:custom": {
+      "minecraft:sprint_one_cm": 1382,
+      "minecraft:time_since_rest": 509,
+      "minecraft:walk_one_cm": 4600,
+      "minecraft:total_world_time": 597,
+      "minecraft:leave_game": 1,
+      "minecraft:fly_one_cm": 101,
+      "minecraft:mob_kills": 2,
+      "minecraft:play_time": 509,
+      "minecraft:damage_dealt": 139,
+      "minecraft:jump": 1,
+      "minecraft:time_since_death": 509
+    }
+  },
+  "DataVersion": 4671
+}

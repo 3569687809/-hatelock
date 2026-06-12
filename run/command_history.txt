@@ -1,0 +1,12 @@
+/give @p rodrailgun:test_item
+/give @p rodrailgun:rod
+/attribute Player4
+/attribute Player4 minecraft:armor base get 1
+/aggro list
+/aggro set play4
+/aggro set Player829 zombie
+/aggro list
+/aggro remove Player829 zombie
+/aggro list
+/aggro set Player938 axolotl
+/aggro list

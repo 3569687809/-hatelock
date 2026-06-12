@@ -1,0 +1,6 @@
+{
+  "enabled": true,
+  "radius": 128,
+  "scanInterval": 40,
+  "rules": []
+}
