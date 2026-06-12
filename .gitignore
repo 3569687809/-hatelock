@@ -1,11 +1,49 @@
-# Java / Gradle
+# Gradle
+
 .gradle/
+
+# Build Output
+
 build/
 out/
-*.class
-*.jar
+
+# IDEA
+
+.idea/
+*.iml
+
+# VSCode
+
+.vscode/
+
+# Eclipse
+
+.project
+.classpath
+.settings/
+
+# Logs
+
+logs/
 *.log
 
-# IntelliJ IDEA
-.idea/
-*.imlsss
+# Runtime
+
+run/
+
+# Fabric
+
+remappedSrc/
+
+# Java
+
+*.class
+
+# OS
+
+Thumbs.db
+.DS_Store
+
+# Generated
+
+*.cache
