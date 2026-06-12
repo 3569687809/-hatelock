@@ -200,5 +200,4 @@ MIT License
 
 # 作者
 
-GDkk
-GPT(协助开发)
+空空/GPT(协助开发)
