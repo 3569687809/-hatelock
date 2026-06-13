@@ -4,6 +4,7 @@ import com.yourname.hatelock.AggroHandler;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -13,15 +14,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MobEntityMixin {
 
 	@Inject(method = "setTarget", at = @At("HEAD"), cancellable = true)
-	private void blockTarget(LivingEntity target, CallbackInfo ci) {
+	private void onSetTarget(LivingEntity target, CallbackInfo ci) {
 
-		// 只处理玩家目标
+		if (!AggroHandler.isEnabled()) return;
+
 		if (!(target instanceof ServerPlayerEntity player)) return;
 
-		MobEntity self = (MobEntity) (Object) this;
+		MobEntity self = (MobEntity)(Object)this;
 
-		// 不允许锁定则直接阻止
-		if (!AggroHandler.canTarget(self, player)) {
+		if (!AggroHandler.isAllowed(self, player)) {
 			ci.cancel();
 		}
 	}

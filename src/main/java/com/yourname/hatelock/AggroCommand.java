@@ -17,35 +17,38 @@ public class AggroCommand {
 
         dispatcher.register(literal("aggro")
 
-                // ================= toggle =================
                 .then(literal("toggle")
                         .executes(ctx -> {
                             boolean state = AggroHandler.toggle();
                             ctx.getSource().sendFeedback(
-                                    () -> Text.literal("Aggro: " + (state ? "ON" : "OFF")),
+                                    () -> Text.literal("Aggro: " + state),
                                     false
                             );
                             return 1;
                         })
                 )
 
-                // ================= radius =================
+                .then(literal("reload")
+                        .executes(ctx -> {
+                            AggroHandler.load();
+                            ctx.getSource().sendFeedback(
+                                    () -> Text.literal("Reloaded"),
+                                    false
+                            );
+                            return 1;
+                        })
+                )
+
                 .then(literal("radius")
                         .then(argument("value", IntegerArgumentType.integer(1, 512))
                                 .executes(ctx -> {
                                     int r = IntegerArgumentType.getInteger(ctx, "value");
                                     AggroHandler.setRadius(r);
-
-                                    ctx.getSource().sendFeedback(
-                                            () -> Text.literal("Radius set: " + r),
-                                            false
-                                    );
                                     return 1;
                                 })
                         )
                 )
 
-                // ================= list =================
                 .then(literal("list")
                         .executes(ctx -> {
                             ctx.getSource().sendFeedback(AggroHandler::listRules, false);
@@ -53,12 +56,11 @@ public class AggroCommand {
                         })
                 )
 
-                // ================= set（恢复补全） =================
+                // ================= SET（核心修复） =================
                 .then(literal("set")
                         .then(argument("player", StringArgumentType.word())
                                 .suggests((ctx, builder) -> {
 
-                                    // ✔ 玩家补全
                                     ctx.getSource().getServer()
                                             .getPlayerManager()
                                             .getPlayerList()
@@ -70,7 +72,6 @@ public class AggroCommand {
                                 .then(argument("mobId", StringArgumentType.word())
                                         .suggests((ctx, builder) -> {
 
-                                            // ✔ 生物补全 + 中文提示
                                             StreamSupport.stream(Registries.ENTITY_TYPE.spliterator(), false)
                                                     .forEach(type -> {
 
@@ -87,6 +88,7 @@ public class AggroCommand {
                                             return builder.buildFuture();
                                         })
 
+                                        // ===== 无时间（永久）=====
                                         .executes(ctx -> {
 
                                             String player = StringArgumentType.getString(ctx, "player");
@@ -95,18 +97,41 @@ public class AggroCommand {
                                             AggroHandler.addRule(player, mobId, -1);
 
                                             ctx.getSource().sendFeedback(
-                                                    () -> Text.literal("Added: " + player + " -> " + mobId),
+                                                    () -> Text.literal("Added PERM: " + player + " -> " + mobId),
                                                     false
                                             );
+
                                             return 1;
                                         })
+
+                                        // ===== 有时间 =====
+                                        .then(argument("time", StringArgumentType.word())
+                                                .executes(ctx -> {
+
+                                                    String player = StringArgumentType.getString(ctx, "player");
+                                                    String mobId = StringArgumentType.getString(ctx, "mobId");
+                                                    String time = StringArgumentType.getString(ctx, "time");
+
+                                                    long expire = parseTime(time);
+
+                                                    AggroHandler.addRule(player, mobId, expire);
+
+                                                    ctx.getSource().sendFeedback(
+                                                            () -> Text.literal("Added TEMP: " + player + " -> " + mobId),
+                                                            false
+                                                    );
+
+                                                    return 1;
+                                                })
+                                        )
                                 )
                         )
                 )
 
-                // ================= remove =================
                 .then(literal("remove")
                         .then(argument("player", StringArgumentType.word())
+
+                                // 玩家补全
                                 .suggests((ctx, builder) -> {
 
                                     AggroHandler.getConfig().rules.stream()
@@ -117,37 +142,115 @@ public class AggroCommand {
                                     return builder.buildFuture();
                                 })
 
+                                // /aggro remove 玩家
+                                .executes(ctx -> {
+
+                                    String player =
+                                            StringArgumentType.getString(ctx, "player");
+
+                                    int before =
+                                            AggroHandler.getConfig().rules.size();
+
+                                    AggroHandler.getConfig().rules.removeIf(
+                                            r -> r.player.equalsIgnoreCase(player)
+                                    );
+
+                                    AggroHandler.save();
+
+                                    int removed =
+                                            before - AggroHandler.getConfig().rules.size();
+
+                                    ctx.getSource().sendFeedback(
+                                            () -> Text.literal(
+                                                    "Removed " + removed +
+                                                            " rules for " + player
+                                            ),
+                                            false
+                                    );
+
+                                    return 1;
+                                })
+
+                                // /aggro remove 玩家 怪物
                                 .then(argument("mobId", StringArgumentType.word())
+
+                                        // 怪物补全
                                         .suggests((ctx, builder) -> {
 
-                                            String player = StringArgumentType.getString(ctx, "player");
+                                            String player =
+                                                    StringArgumentType.getString(ctx, "player");
 
                                             AggroHandler.getConfig().rules.stream()
-                                                    .filter(r -> r.player.equals(player))
-                                                    .forEach(r -> builder.suggest(
-                                                            r.mobId,
-                                                            Text.literal(MobNameMap.getDisplay(r.mobId))
-                                                    ));
+                                                    .filter(r ->
+                                                            r.player.equalsIgnoreCase(player))
+                                                    .forEach(r ->
+                                                            builder.suggest(r.mobId));
 
                                             return builder.buildFuture();
                                         })
 
                                         .executes(ctx -> {
 
-                                            String p = StringArgumentType.getString(ctx, "player");
-                                            String m = StringArgumentType.getString(ctx, "mobId");
+                                            String p =
+                                                    StringArgumentType.getString(ctx, "player");
 
-                                            boolean ok = AggroHandler.removeRule(p, m);
+                                            String m =
+                                                    StringArgumentType.getString(ctx, "mobId");
+
+                                            boolean ok =
+                                                    AggroHandler.removeRule(p, m);
 
                                             ctx.getSource().sendFeedback(
-                                                    () -> Text.literal(ok ? "Removed" : "Not found"),
+                                                    () -> Text.literal(
+                                                            ok ? "Removed" : "Not found"
+                                                    ),
                                                     false
                                             );
+
                                             return 1;
                                         })
                                 )
                         )
                 )
         );
+    }
+
+    // ================= TIME PARSE =================
+    private static long parseTime(String input) {
+
+        if (input == null || input.isEmpty()) return -1;
+
+        try {
+            input = input.toLowerCase();
+
+            long total = 0;
+            StringBuilder num = new StringBuilder();
+
+            for (char c : input.toCharArray()) {
+
+                if (Character.isDigit(c)) {
+                    num.append(c);
+                    continue;
+                }
+
+                if (num.length() == 0) continue;
+
+                long v = Long.parseLong(num.toString());
+                num.setLength(0);
+
+                switch (c) {
+                    case 's' -> total += v * 1000;
+                    case 'm' -> total += v * 60 * 1000;
+                    case 'h' -> total += v * 60 * 60 * 1000;
+                    case 'd' -> total += v * 24 * 60 * 60 * 1000;
+                }
+            }
+
+            return total == 0 ? -1 : System.currentTimeMillis() + total;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return -1;
+        }
     }
 }

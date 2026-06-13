@@ -13,10 +13,10 @@ public class AggroRule {
     }
 
     public boolean isPermanent() {
-        return expireAt <= 0;
+        return expireAt < 0;
     }
 
     public boolean isExpired(long now) {
-        return expireAt > 0 && now > expireAt;
+        return !isPermanent() && now > expireAt;
     }
 }

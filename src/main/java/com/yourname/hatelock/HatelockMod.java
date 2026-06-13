@@ -15,8 +15,10 @@ public class HatelockMod implements ModInitializer {
 
 		LOGGER.info("Hatelock v3 loading...");
 
+		// ✅ 只初始化一次
 		AggroHandler.init();
 
+		// ✅ 只注册一次命令
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 			AggroCommand.register(dispatcher);
 		});

@@ -5,59 +5,62 @@ import java.util.Map;
 
 public class MobNameMap {
 
-    private static final Map<String, String> ID_TO_CN = new HashMap<>();
-    private static final Map<String, String> CN_TO_ID = new HashMap<>();
+    private static final Map<String, String> MAP = new HashMap<>();
 
     static {
-        add("zombie", "僵尸");
-        add("creeper", "苦力怕");
-        add("skeleton", "骷髅");
-        add("spider", "蜘蛛");
-        add("cave_spider", "洞穴蜘蛛");
-        add("enderman", "末影人");
-        add("witch", "女巫");
-        add("slime", "史莱姆");
-        add("magma_cube", "岩浆怪");
-        add("blaze", "烈焰人");
-        add("ghast", "恶魂");
-        add("piglin", "猪灵");
-        add("piglin_brute", "猪灵蛮兵");
-        add("zombified_piglin", "僵尸猪灵");
-        add("hoglin", "疣猪兽");
-        add("zoglin", "僵尸疣猪兽");
-        add("warden", "监守者");
-        add("ravager", "劫掠兽");
-        add("evoker", "唤魔者");
-        add("vindicator", "卫道士");
-        add("pillager", "掠夺者");
-        add("illusioner", "幻术师");
-        add("phantom", "幻翼");
-        add("silverfish", "蠹虫");
-        add("endermite", "末影螨");
-        add("guardian", "守卫者");
-        add("elder_guardian", "远古守卫者");
-        add("drowned", "溺尸");
-        add("husk", "尸壳");
-        add("stray", "流浪者");
-        add("bogged", "沼骸");
-        add("breeze", "旋风人");
-        add("creaking", "嘎枝");
+
+        // ===== Minecraft 常见生物 =====
+        MAP.put("zombie", "僵尸");
+        MAP.put("skeleton", "骷髅");
+        MAP.put("creeper", "苦力怕");
+        MAP.put("spider", "蜘蛛");
+        MAP.put("enderman", "末影人");
+        MAP.put("witch", "女巫");
+        MAP.put("slime", "史莱姆");
+        MAP.put("blaze", "烈焰人");
+        MAP.put("ghast", "恶魂");
+        MAP.put("piglin", "猪灵");
+        MAP.put("hoglin", "疣猪兽");
+        MAP.put("warden", "监守者");
+
+        // ===== 动物 =====
+        MAP.put("cow", "牛");
+        MAP.put("pig", "猪");
+        MAP.put("sheep", "羊");
+        MAP.put("chicken", "鸡");
+        MAP.put("rabbit", "兔子");
+        MAP.put("horse", "马");
+
+        // ===== 海洋生物 =====
+        MAP.put("drowned", "溺尸");
+        MAP.put("guardian", "守卫者");
+        MAP.put("elder_guardian", "远古守卫者");
+        MAP.put("squid", "鱿鱼");
+
+        // ===== 其他 =====
+        MAP.put("villager", "村民");
+        MAP.put("iron_golem", "铁傀儡");
     }
 
-    private static void add(String id, String cn) {
-        ID_TO_CN.put(id, cn);
-        CN_TO_ID.put(cn, id);
-    }
-
-    public static String getChinese(String id) {
-        return ID_TO_CN.getOrDefault(id, id);
-    }
-
-    public static String getId(String input) {
-        return CN_TO_ID.getOrDefault(input, input);
-    }
-
+    // ================= 核心方法 =================
     public static String getDisplay(String id) {
-        return getChinese(id) + " (" + id + ")";
+
+        if (id == null || id.isEmpty()) {
+            return "unknown";
+        }
+
+        String cn = MAP.get(id);
+
+        if (cn != null) {
+            return cn + " (" + id + ")";
+        }
+
+        // fallback：避免服务器端崩溃
+        return id;
+    }
+
+    // ================= 可扩展注册 =================
+    public static void register(String id, String name) {
+        MAP.put(id, name);
     }
 }
