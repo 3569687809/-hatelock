@@ -1,7 +1,7 @@
 {
 	"schemaVersion": 1,
 	"id": "hatelock",
-	"version": "1.2.0",
+	"version": "2.0.0",
 	"name": "HateLock",
 	"description": "仇恨锁定模组,可以将任意怪物锁定到任意玩家上",
 	"authors": [

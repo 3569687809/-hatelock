@@ -7,6 +7,8 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.registry.Registries;
 
 import java.util.stream.StreamSupport;
 
@@ -155,7 +157,33 @@ public class AggroCommand {
                                                     String player = StringArgumentType.getString(ctx, "player");
                                                     String mobId = StringArgumentType.getString(ctx, "mobId");
 
-                                                    boolean removed = AggroHandler.removeRule(player, mobId);
+                                                    boolean removed = AggroHandler.removeRule(ctx.getSource().getServer(), player, mobId);
+
+                                                    if (removed) {
+
+                                                        ctx.getSource().getServer().getWorlds().forEach(world -> {
+
+                                                            world.iterateEntities().forEach(entity -> {
+
+                                                                if (entity instanceof MobEntity mob) {
+
+                                                                    String entityId = Registries.ENTITY_TYPE
+                                                                            .getId(mob.getType())
+                                                                            .getPath();
+
+                                                                    if (!entityId.equals(mobId)) {
+                                                                        return;
+                                                                    }
+
+                                                                    if (mob.getTarget() != null &&
+                                                                            mob.getTarget().getName().getString().equals(player)) {
+
+                                                                        mob.setTarget(null);
+                                                                    }
+                                                                }
+                                                            });
+                                                        });
+                                                    }
 
                                                     ctx.getSource().sendFeedback(() ->
                                                             Text.literal(removed ? "Removed" : "Not found"), false);
@@ -170,6 +198,21 @@ public class AggroCommand {
 
                                             AggroHandler.getConfig().rules.removeIf(r -> r.player.equals(player));
                                             AggroHandler.saveConfig();
+
+                                            ctx.getSource().getServer().getWorlds().forEach(world -> {
+
+                                                world.iterateEntities().forEach(entity -> {
+
+                                                    if (entity instanceof MobEntity mob) {
+
+                                                        if (mob.getTarget() != null &&
+                                                                mob.getTarget().getName().getString().equals(player)) {
+
+                                                            mob.setTarget(null);
+                                                        }
+                                                    }
+                                                });
+                                            });
 
                                             ctx.getSource().sendFeedback(() ->
                                                     Text.literal("Removed ALL rules for " + player), false);
@@ -214,18 +257,6 @@ public class AggroCommand {
 
     // ================= 生物显示（中文 + 英文） =================
     private static String getMobDisplay(String id) {
-        try {
-            Identifier identifier = Identifier.tryParse(id.contains(":") ? id : "minecraft:" + id);
-            EntityType<?> type = Registries.ENTITY_TYPE.get(identifier);
-
-            if (type != null) {
-                String name = type.getName().getString();
-                if (name != null && !name.equals(id)) {
-                    return name + " (" + id + ")";
-                }
-            }
-        } catch (Exception ignored) {}
-
-        return id;
+        return MobNameMap.getDisplay(id);
     }
 }
