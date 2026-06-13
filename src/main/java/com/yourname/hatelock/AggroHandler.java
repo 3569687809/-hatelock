@@ -1,73 +1,26 @@
 package com.yourname.hatelock;
 
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.registry.Registries;
-import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.Box;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.*;
+import java.util.*;
 
 public class AggroHandler {
 
     private static AggroConfig config = new AggroConfig();
-    private static int tickCounter = 0;
-    private static File configFile;
+    private static File file;
 
     // ================= INIT =================
     public static void init() {
-
-        configFile = new File("config/mobaggro/aggro.json");
-        loadConfig();
-
-        ServerTickEvents.END_SERVER_TICK.register(AggroHandler::onTick);
+        file = new File("config/hatelock/aggro.json");
+        load();
     }
 
-    // ================= TICK =================
-    private static void onTick(MinecraftServer server) {
-
-        if (!config.enabled) return;
-
-        tickCounter++;
-        if (tickCounter < 20) return;
-        tickCounter = 0;
-
-        long now = System.currentTimeMillis();
-
-        config.rules.removeIf(r -> r.isExpired(now));
-
-        for (ServerWorld world : server.getWorlds()) {
-
-            for (ServerPlayerEntity player : world.getPlayers()) {
-
-                if (player.isSpectator() || player.isCreative()) continue;
-
-                Box box = player.getBoundingBox().expand(config.radius);
-
-                List<MobEntity> mobs = world.getEntitiesByClass(
-                        MobEntity.class,
-                        box,
-                        mob -> isRuleMatch(player, mob)
-                );
-
-                for (MobEntity mob : mobs) {
-                    mob.setTarget(player);
-                }
-            }
-        }
-    }
-
-    // ================= RULE MATCH =================
-    private static boolean isRuleMatch(ServerPlayerEntity player, MobEntity mob) {
+    // ================= 核心判断（AI用） =================
+    public static boolean canTarget(MobEntity mob, ServerPlayerEntity player) {
 
         String mobId = Registries.ENTITY_TYPE.getId(mob.getType()).getPath();
 
@@ -77,78 +30,68 @@ public class AggroHandler {
         );
     }
 
-    // ================= API =================
+    // ================= 规则 =================
+    public static void addRule(String player, String mobId, long expire) {
+        config.rules.add(new AggroRule(player, mobId, expire));
+        save();
+    }
+
+    public static boolean removeRule(String player, String mobId) {
+        boolean removed = config.rules.removeIf(r ->
+                r.player.equals(player) && r.mobId.equalsIgnoreCase(mobId)
+        );
+        if (removed) save();
+        return removed;
+    }
+
+    // ================= toggle =================
     public static boolean toggle() {
         config.enabled = !config.enabled;
-        saveConfig();
+        save();
         return config.enabled;
     }
 
+    // ================= radius =================
     public static void setRadius(int r) {
         config.radius = r;
-        saveConfig();
+        save();
     }
 
     public static int getRadius() {
         return config.radius;
     }
 
-    public static void addRule(String player, String mobId, long expire) {
-        config.rules.add(new AggroRule(player, mobId, expire));
-        saveConfig();
-    }
+    // ================= list =================
+    public static Text listRules() {
 
-    // ================= REMOVE RULE =================
-    public static boolean removeRule(MinecraftServer server, String player, String mobId) {
+        StringBuilder sb = new StringBuilder();
+        long now = System.currentTimeMillis();
 
-        boolean removed = config.rules.removeIf(r ->
-                r.player.equals(player) && r.mobId.equalsIgnoreCase(mobId)
-        );
+        for (AggroRule r : config.rules) {
 
-        if (removed) {
-            saveConfig();
-            clearTargets(server, player, mobId);
+            boolean perm = r.isPermanent();
+
+            sb.append(r.player)
+                    .append(" <- ")
+                    .append(r.mobId)
+                    .append(" ")
+                    .append(perm ? "[永久]" : "[" + ((r.expireAt - now) / 1000) + "s]")
+                    .append("\n");
         }
 
-        return removed;
+        return Text.literal(sb.toString());
     }
 
-    // ================= CLEAR TARGETS (FIXED) =================
-    private static void clearTargets(MinecraftServer server, String player, String mobId) {
-
-        for (ServerWorld world : server.getWorlds()) {
-
-            world.iterateEntities().forEach(entity -> {
-
-                if (!(entity instanceof MobEntity mob)) return;
-
-                String id = Registries.ENTITY_TYPE.getId(mob.getType()).getPath();
-
-                if (!id.equalsIgnoreCase(mobId)) return;
-
-                if (mob.getTarget() == null) return;
-
-                if (mob.getTarget() instanceof ServerPlayerEntity sp) {
-
-                    if (sp.getName().getString().equals(player)) {
-                        mob.setTarget(null);
-                    }
-                }
-            });
-        }
-    }
-
-    // ================= CONFIG =================
-    public static void loadConfig() {
+    // ================= config =================
+    public static void load() {
         try {
-            if (!configFile.exists()) {
-                saveConfig();
+            if (!file.exists()) {
+                save();
                 return;
             }
 
-            FileReader reader = new FileReader(configFile);
-            config = new com.google.gson.Gson().fromJson(reader, AggroConfig.class);
-            reader.close();
+            config = new com.google.gson.Gson()
+                    .fromJson(new FileReader(file), AggroConfig.class);
 
             if (config.rules == null) config.rules = new ArrayList<>();
 
@@ -157,15 +100,15 @@ public class AggroHandler {
         }
     }
 
-    public static void saveConfig() {
+    public static void save() {
         try {
-            configFile.getParentFile().mkdirs();
-            FileWriter writer = new FileWriter(configFile);
+            file.getParentFile().mkdirs();
+
             new com.google.gson.GsonBuilder()
                     .setPrettyPrinting()
                     .create()
-                    .toJson(config, writer);
-            writer.close();
+                    .toJson(config, new FileWriter(file));
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -173,27 +116,5 @@ public class AggroHandler {
 
     public static AggroConfig getConfig() {
         return config;
-    }
-
-    // ================= LIST =================
-    public static Text listRules() {
-
-        MutableText text = Text.literal("MobAggro Rules:\n");
-        long now = System.currentTimeMillis();
-
-        for (AggroRule r : config.rules) {
-
-            boolean perm = r.isPermanent();
-
-            text.append(Text.literal(r.player + " <- " + r.mobId + " "));
-            text.append(Text.literal(
-                            perm ? "[永久]" : "[" + ((r.expireAt - now) / 1000) + "s]"
-                    ).formatted(perm ? Formatting.RED : Formatting.YELLOW)
-            );
-
-            text.append(Text.literal("\n"));
-        }
-
-        return text;
     }
 }

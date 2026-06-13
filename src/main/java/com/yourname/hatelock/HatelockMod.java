@@ -5,7 +5,7 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class hatelock implements ModInitializer {
+public class HatelockMod implements ModInitializer {
 
 	public static final String MOD_ID = "hatelock";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
@@ -13,16 +13,14 @@ public class hatelock implements ModInitializer {
 	@Override
 	public void onInitialize() {
 
-		LOGGER.info("[Hatelock] 模组正在加载...");
+		LOGGER.info("Hatelock v3 loading...");
 
-		// 初始化仇恨系统（无参数版本）
 		AggroHandler.init();
 
-		// 注册命令
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 			AggroCommand.register(dispatcher);
 		});
 
-		LOGGER.info("[Hatelock] 模组加载完成！");
+		LOGGER.info("Hatelock v3 loaded.");
 	}
 }

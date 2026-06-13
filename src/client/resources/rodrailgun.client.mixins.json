@@ -3,7 +3,7 @@
 	"package": "com.yourname.hatelock.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"client": [
-		"ExampleMixin"
+      "MobEntityMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

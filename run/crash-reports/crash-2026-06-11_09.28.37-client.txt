@@ -4,7 +4,7 @@
 Time: 2026-06-11 09:28:37
 Description: Initializing game
 
-java.lang.RuntimeException: Could not execute entrypoint stage 'main' due to errors, provided by 'rodrailgun' at 'com.yourname.hatelock.hatelock'!
+java.lang.RuntimeException: Could not execute entrypoint stage 'main' due to errors, provided by 'rodrailgun' at 'com.yourname.hatelock.HatelockMod'!
 	at net.fabricmc.loader.impl.FabricLoaderImpl.lambda$invokeEntrypoints$0(FabricLoaderImpl.java:413)
 	at net.fabricmc.loader.impl.util.ExceptionUtil.gatherExceptions(ExceptionUtil.java:33)
 	at net.fabricmc.loader.impl.FabricLoaderImpl.invokeEntrypoints(FabricLoaderImpl.java:411)
@@ -20,7 +20,7 @@ Caused by: java.lang.NullPointerException: Item id not set
 	at knot//net.minecraft.item.Item$Settings.getTranslationKey(Item.java:405)
 	at knot//net.minecraft.item.Item.<init>(Item.java:144)
 	at knot//com.yourname.hatelock.ModItems.registerItems(ModItems.java:16)
-	at knot//com.yourname.hatelock.hatelock.onInitialize(RodRailgun.java:16)
+	at knot//com.yourname.hatelock.HatelockMod.onInitialize(RodRailgun.java:16)
 	at net.fabricmc.loader.impl.FabricLoaderImpl.invokeEntrypoints(FabricLoaderImpl.java:409)
 	... 7 more
 

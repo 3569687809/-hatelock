@@ -1,7 +1,7 @@
 {
 	"schemaVersion": 1,
 	"id": "hatelock",
-	"version": "2.0.0",
+	"version": "3.1.0",
 	"name": "HateLock",
 	"description": "仇恨锁定模组,可以将任意怪物锁定到任意玩家上",
 	"authors": [
@@ -16,13 +16,15 @@
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-          "com.yourname.hatelock.hatelock"
+          "com.yourname.hatelock.HatelockMod"
 		],
 		"client": [
 			"com.yourname.hatelock.hatelockClient"
 		]
 	},
-	"mixins": [],
+	"mixins": [
+		"hatelock.mixins.json"
+	],
 	"depends": {
 		"fabricloader": ">=0.19.3",
 		"minecraft": "~1.21.11",
